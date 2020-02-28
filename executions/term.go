@@ -76,7 +76,7 @@ func (p *Term) Diff() float64 {
 func (p *Term) Change() float64 {
 	p.RLock()
 	defer p.RUnlock()
-	return p.first - p.last
+	return math.Max(0, p.first-p.last)
 }
 
 func (p *Term) High() float64 {
