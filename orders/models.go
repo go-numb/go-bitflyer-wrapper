@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"fmt"
 	"math"
 	"sync"
 
@@ -94,6 +95,7 @@ func (p *Managed) Switch(childs []jsonrpc.WsResponseForChildEvent) {
 			p.executed(childs[i])
 
 		case "CANCEL":
+			fmt.Printf("%+v\n", childs[i])
 			p.cancel(childs[i].ChildOrderAcceptanceID)
 
 		case "EXPIRE":
@@ -255,7 +257,7 @@ func (p *Managed) complete(o Order) StatusType {
 
 func (p *Managed) cancel(uuid interface{}) StatusType {
 	p.Orders.m.Delete(uuid)
-	p.Cancels.m.Store(uuid, true)
+	p.Cancels.m.Store(uuid, Order{})
 	return Canceled
 }
 
