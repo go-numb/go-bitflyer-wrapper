@@ -48,13 +48,13 @@ func (p *Term) Set(ltp float64, prices, volumes []float64) {
 		return
 	}
 
-	p.highAndLow(ltp)
 	p.last = ltp
 }
 
 func (p *Term) Reset() {
 	p.Lock()
 	defer p.Unlock()
+	p.highAndLow()
 	p.prices = make([]float64, 0)
 	p.volumes = make([]float64, 0)
 }
@@ -106,7 +106,7 @@ func (p *Term) WeightPrice() float64 {
 	return stat.Mean(p.prices, p.volumes)
 }
 
-func (p *Term) highAndLow(ltp float64) {
+func (p *Term) highAndLow() {
 	l := len(p.prices)
 	if l < 1 {
 		p.isBuy = 0
@@ -119,7 +119,7 @@ func (p *Term) highAndLow(ltp float64) {
 		wg     sync.WaitGroup
 		nH, nL int
 		high   float64
-		low    = ltp
+		low    = p.last
 	)
 
 	wg.Add(1)
