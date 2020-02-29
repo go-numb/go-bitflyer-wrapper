@@ -139,9 +139,11 @@ func (p *Term) highAndLow() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		var volume float64
 		for i := range p.volumes {
-			p.volume += p.volumes[i]
+			volume += p.volumes[i]
 		}
+		p.volume = volume
 	}()
 
 	wg.Wait()
