@@ -29,24 +29,13 @@ func (p *Term) Set(ltp float64, prices, volumes []float64) {
 	p.Lock()
 	defer p.Unlock()
 
-	// 現在を過去n秒の配列に追加
-	l := len(p.prices)
-	if l == 0 {
-		p.first = ltp
-	}
-	p.prices = append(p.prices, prices...)    // 過去に現在を追加
-	p.volumes = append(p.volumes, volumes...) // 過去に現在を追加
-
-	if 0 < l { // lenghtを合わせる
-		p.prices = p.prices[l:]
-		p.volumes = p.volumes[l:]
-	}
-
 	if len(p.prices) != len(p.volumes) {
-		p.prices = []float64{}
-		p.volumes = []float64{}
 		return
 	}
+
+	// 現在を過去n秒の配列に追加
+	p.prices = append(p.prices, prices...)    // 過去に現在を追加
+	p.volumes = append(p.volumes, volumes...) // 過去に現在を追加
 
 	p.last = ltp
 }
@@ -114,6 +103,9 @@ func (p *Term) highAndLow() {
 		p.high = 0
 		return
 	}
+
+	// リセット時、最新の価格をリセット後の最初の価格とする
+	p.first = p.last
 
 	var (
 		wg     sync.WaitGroup
