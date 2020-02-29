@@ -1,7 +1,9 @@
 package orders
 
 import (
+	"fmt"
 	"math"
+	"sort"
 	"sync"
 
 	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
@@ -140,6 +142,29 @@ func (p *Orders) Set(o Order) {
 
 func (p *Orders) Delete(uuid interface{}) {
 	p.m.Delete(uuid)
+}
+
+// Deletes 保有注文/建玉/キャンセルを一部削除する
+// 削除ルールはorderIDをストリングソートし、古い方から引数分だけ
+func (p *Orders) Deletes(parcent int) (deleteCount int) {
+	var keys []string
+	p.m.Range(func(k, v interface{}) bool {
+		keys = append(keys, fmt.Sprintf("%v", k))
+		return true
+	})
+
+	// 古いものが先頭
+	sort.Strings(keys)
+	stop := float64(len(keys)) * float64(parcent) / float64(100)
+	for range keys {
+		p.m.Delete(keys[deleteCount])
+
+		deleteCount++
+		if stop < float64(deleteCount) {
+			break
+		}
+	}
+	return deleteCount
 }
 
 func (p *Orders) IsThere(uuid interface{}) (o Order, isThere bool) {
