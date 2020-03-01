@@ -1,7 +1,6 @@
 package executions
 
 import (
-	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -48,7 +47,6 @@ func New() *Execution {
 // Set price/ltp(before1ws), bestbid/ask, volume, delay
 // benchmark: 7-25μs by Macbook Pro i7 2015 Late
 func (p *Execution) Set(ex []pex.Execution) {
-
 	p.Lock()
 	defer p.Unlock()
 
@@ -63,12 +61,6 @@ func (p *Execution) Set(ex []pex.Execution) {
 	p.sellSize = 0
 	p.prices = []float64{}
 	p.volumes = []float64{}
-
-	start := time.Now()
-	defer func() { // 処理時間の計測
-		end := time.Now()
-		fmt.Println("exec time: ", end.Sub(start))
-	}()
 
 	wg.Add(1)
 	go func() {
