@@ -2,11 +2,12 @@ package executions
 
 import (
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	v1 "github.com/go-numb/go-bitflyer/v1"
-	"github.com/go-numb/go-bitflyer/v1/public/executions"
+	pex "github.com/go-numb/go-bitflyer/v1/public/executions"
 )
 
 type Execution struct {
@@ -26,6 +27,9 @@ type Execution struct {
 	prices  []float64
 	volumes []float64
 
+	// Losscuts
+	l chan Losscut
+
 	delay time.Duration
 }
 
@@ -35,11 +39,14 @@ func New() *Execution {
 
 		prices:  make([]float64, 0),
 		volumes: make([]float64, 0),
+
+		l: make(chan Losscut),
 	}
 }
 
 // Set price/ltp(before1ws), bestbid/ask, volume, delay
-func (p *Execution) Set(ex []executions.Execution) {
+// benchmark: 7-25μs by Macbook Pro i7 2015 Late
+func (p *Execution) Set(ex []pex.Execution) {
 	// start := time.Now()
 	// defer func() { // 処理時間の計測
 	// 	end := time.Now()
@@ -49,9 +56,11 @@ func (p *Execution) Set(ex []executions.Execution) {
 	p.Lock()
 	defer p.Unlock()
 
-	var wg sync.WaitGroup
+	var (
+		wg sync.WaitGroup
+		l  = len(ex)
+	)
 
-	l := len(ex)
 	p.length = l
 	// 1配信毎の Reset
 	p.buySize = 0
@@ -59,34 +68,12 @@ func (p *Execution) Set(ex []executions.Execution) {
 	p.prices = []float64{}
 	p.volumes = []float64{}
 
-	// 値幅/出来高影響力を算出するために直近価格を保存
-	var lastPrice = p.price
-	if lastPrice == 0 {
-		if len(ex) != 0 {
-			lastPrice = ex[0].Price
-		}
-	}
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		if l != 0 {
 			p.delay = time.Now().Sub(ex[l-1].ExecDate.Time)
 		}
-	}()
-
-	wg.Add(1)
-	go func() { // 約定量を取得
-		defer wg.Done()
-
-		for i := range ex {
-			if ex[i].Side == v1.BUY {
-				p.buySize += ex[i].Size
-			} else if ex[i].Side == v1.SELL {
-				p.sellSize += ex[i].Size
-			}
-		}
-
 	}()
 
 	wg.Add(1)
@@ -106,6 +93,7 @@ func (p *Execution) Set(ex []executions.Execution) {
 		p.volumes = volumes
 	}()
 
+	// == より、strings.HasPrefixのほうが早い
 	wg.Add(1)
 	go func() { // 約定ベースのBest値をとっていく
 		defer wg.Done()
@@ -114,15 +102,36 @@ func (p *Execution) Set(ex []executions.Execution) {
 		p.ltp = p.price
 
 		for i := range ex {
-			if ex[i].Side == v1.BUY {
+			if strings.HasPrefix(ex[i].Side, v1.BUY) {
 				// 配信内初回約定
+				p.buySize += ex[i].Size
 				p.best(true, ex[i].Price)
 
-			} else if ex[i].Side == v1.SELL {
+			} else if strings.HasPrefix(ex[i].Side, v1.SELL) {
 				// 配信内初回約定
+				p.sellSize += ex[i].Size
 				p.best(false, ex[i].Price)
 
 			}
+		}
+	}()
+
+	wg.Add(1)
+	go func() { // gets REKT
+		defer wg.Done()
+
+		var loss Losscut
+		for i := range ex {
+			if !loss.isDisadvantage(ex[i]) {
+				continue
+			}
+			loss.isLosscut = true
+			loss.volume += ex[i].Size
+		}
+
+		// if gets Losscut, send to channel.
+		if loss.isLosscut {
+			go loss.revieved(p.l)
 		}
 	}()
 
