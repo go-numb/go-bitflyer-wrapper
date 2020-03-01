@@ -22,7 +22,7 @@ func TestSetExecution(t *testing.T) {
 			case v := <-ch:
 				switch v.Type {
 				case jsonrpc.Executions:
-					e.Set(v.Executions)
+					e.HighPerformanceSet(v.Executions)
 					ask, bid := e.Best()
 					fmt.Printf("%.f	%.f	%v\n", ask, bid, e.Delay().Seconds())
 					sum, buy, sell := e.Volume()

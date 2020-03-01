@@ -1,6 +1,7 @@
 package executions
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -47,11 +48,6 @@ func New() *Execution {
 // Set price/ltp(before1ws), bestbid/ask, volume, delay
 // benchmark: 7-25μs by Macbook Pro i7 2015 Late
 func (p *Execution) Set(ex []pex.Execution) {
-	// start := time.Now()
-	// defer func() { // 処理時間の計測
-	// 	end := time.Now()
-	// 	fmt.Println("exec time: ", end.Sub(start))
-	// }()
 
 	p.Lock()
 	defer p.Unlock()
@@ -67,6 +63,12 @@ func (p *Execution) Set(ex []pex.Execution) {
 	p.sellSize = 0
 	p.prices = []float64{}
 	p.volumes = []float64{}
+
+	start := time.Now()
+	defer func() { // 処理時間の計測
+		end := time.Now()
+		fmt.Println("exec time: ", end.Sub(start))
+	}()
 
 	wg.Add(1)
 	go func() {
@@ -122,11 +124,7 @@ func (p *Execution) Set(ex []pex.Execution) {
 
 		var loss Losscut
 		for i := range ex {
-			if !loss.isDisadvantage(ex[i]) {
-				continue
-			}
-			loss.isLosscut = true
-			loss.volume += ex[i].Size
+			loss.IsDisadvantage(ex[i])
 		}
 
 		// if gets Losscut, send to channel.
@@ -136,6 +134,60 @@ func (p *Execution) Set(ex []pex.Execution) {
 	}()
 
 	wg.Wait()
+}
+
+// HighPerformanceSet price/ltp(before1ws), bestbid/ask, volume, delay
+// benchmark: 1.7-11μs by Macbook Pro i7 2015 Late
+func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
+	p.Lock()
+	defer p.Unlock()
+
+	l := len(ex)
+	p.length = l
+	// 1配信毎の Reset
+	p.buySize = 0
+	p.sellSize = 0
+	p.prices = []float64{}
+	p.volumes = []float64{}
+
+	if l != 0 {
+		p.delay = time.Now().Sub(ex[l-1].ExecDate.Time)
+	}
+
+	// 一配信前の価格を退避
+	p.ltp = p.price
+	var loss Losscut
+
+	prices := make([]float64, len(ex))
+	volumes := make([]float64, len(ex))
+
+	for i := range ex {
+		prices[i] = ex[i].Price
+		volumes[i] = ex[i].Size
+		loss.IsDisadvantage(ex[i])
+
+		if strings.HasPrefix(ex[i].Side, v1.BUY) {
+			// 配信内初回約定
+			p.buySize += ex[i].Size
+			p.best(true, ex[i].Price)
+
+		} else if strings.HasPrefix(ex[i].Side, v1.SELL) {
+			// 配信内初回約定
+			p.sellSize += ex[i].Size
+			p.best(false, ex[i].Price)
+
+		}
+	}
+
+	if loss.isLosscut {
+		go loss.revieved(p.l)
+	}
+
+	if len(prices) != len(volumes) {
+		return
+	}
+	p.prices = prices
+	p.volumes = volumes
 }
 
 func (p *Execution) best(isBuy bool, price float64) {

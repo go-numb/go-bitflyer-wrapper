@@ -21,19 +21,39 @@ func (loss Losscut) revieved(c chan Losscut) {
 	c <- loss
 }
 
-// isDisadvantage 不利約定の集計
-func (p *Losscut) isDisadvantage(e pex.Execution) bool {
+// IsDisadvantage 不利約定の集計
+func (p *Losscut) IsDisadvantage(e pex.Execution) bool {
 	if !strings.HasPrefix(e.BuyChildOrderAcceptanceID, "JRF") {
 		p.side = 1
+		p.isLosscut = true
+		p.volume += e.Size
 		p.createdAt = time.Now()
 		return true
 	} else if !strings.HasPrefix(e.SellChildOrderAcceptanceID, "JRF") {
 		p.side = -1
+		p.isLosscut = true
+		p.volume += e.Size
 		p.createdAt = time.Now()
 		return true
 	}
 
 	return false
+}
+
+func (p *Losscut) IsThere() bool {
+	return p.isLosscut
+}
+
+func (p *Losscut) Side() int {
+	return p.side
+}
+
+func (p *Losscut) Volume() float64 {
+	return p.volume
+}
+
+func (p *Losscut) CreatedAt() time.Time {
+	return p.createdAt
 }
 
 func (p Losscut) String() string {
