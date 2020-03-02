@@ -13,8 +13,7 @@ func TestSetExecution(t *testing.T) {
 	ch := make(chan jsonrpc.Response)
 	go jsonrpc.Get([]string{"lightning_executions_FX_BTC_JPY"}, ch)
 
-	loss := make(chan Losscut)
-	e := New(loss)
+	e := New()
 
 	var eg errgroup.Group
 
@@ -48,7 +47,7 @@ func TestSetExecution(t *testing.T) {
 				var l Losscut
 				l.isLosscut = true
 				l.createdAt = time.Now()
-				l.received(e.l)
+				e.received(l)
 
 			}
 		}
@@ -58,7 +57,7 @@ func TestSetExecution(t *testing.T) {
 	eg.Go(func() error {
 		for {
 			select {
-			case v := <-loss:
+			case v := <-e.Event:
 				fmt.Printf("losscut: %+v\n", v)
 			}
 		}

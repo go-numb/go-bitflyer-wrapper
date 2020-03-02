@@ -18,10 +18,6 @@ type Losscut struct {
 	createdAt time.Time
 }
 
-func (loss Losscut) received(c chan Losscut) {
-	c <- loss
-}
-
 // IsDisadvantage 不利約定の集計
 func (p *Losscut) IsDisadvantage(e pex.Execution) bool {
 	if !strings.HasPrefix(e.BuyChildOrderAcceptanceID, "JRF") {

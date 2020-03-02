@@ -27,20 +27,24 @@ type Execution struct {
 	volumes []float64
 
 	// Losscuts
-	l chan Losscut
+	Event chan interface{}
 
 	delay time.Duration
 }
 
 // New is new Executes
-func New(ch chan Losscut) *Execution {
+func New() *Execution {
 	return &Execution{
 
 		prices:  make([]float64, 0),
 		volumes: make([]float64, 0),
 
-		l: ch,
+		Event: make(chan interface{}),
 	}
+}
+
+func (p *Execution) received(in interface{}) {
+	p.Event <- in
 }
 
 // Set price/ltp(before1ws), bestbid/ask, volume, delay
@@ -129,7 +133,7 @@ func (p *Execution) Set(ex []pex.Execution) {
 
 		// if gets Losscut, send to channel.
 		if loss.isLosscut {
-			go loss.received(p.l)
+			go p.received(loss)
 		}
 	}()
 
@@ -180,7 +184,7 @@ func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
 	}
 
 	if loss.isLosscut {
-		go loss.received(p.l)
+		go p.received(loss)
 	}
 
 	if len(prices) != len(volumes) {
