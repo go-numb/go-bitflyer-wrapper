@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
@@ -111,7 +110,7 @@ func (p *Managed) executed(e jsonrpc.WsResponseForChildEvent) StatusType {
 		return NotExist
 	}
 
-	if strings.HasPrefix(e.Side, v1.BUY) {
+	if e.Side == v1.BUY {
 		// Qtyは正, e.Sizeは正
 		o.Qty -= e.Size
 		if 0 < o.Qty { // 買建玉が残る部分約定
@@ -121,7 +120,7 @@ func (p *Managed) executed(e jsonrpc.WsResponseForChildEvent) StatusType {
 		o.Qty = e.Size
 		return p.complete(o)
 
-	} else if strings.HasPrefix(e.Side, v1.SELL) {
+	} else if e.Side == v1.SELL {
 		// Qtyは負, e.Sizeは正
 		o.Qty += e.Size
 		if o.Qty < 0 { // 売建玉が残る部分約定
@@ -211,7 +210,7 @@ func (p *Managed) Check(isCancel bool, uuid interface{}, side string, qty float6
 		return NotExist
 	}
 
-	if strings.HasPrefix(side, v1.BUY) {
+	if side == v1.BUY {
 		// Qtyは正, qtyは正
 		o.Qty -= qty
 		if 0 < o.Qty { // 買建玉が残る部分約定
@@ -221,7 +220,7 @@ func (p *Managed) Check(isCancel bool, uuid interface{}, side string, qty float6
 		o.Qty = qty
 		return p.complete(o)
 
-	} else if strings.HasPrefix(side, v1.SELL) {
+	} else if side == v1.SELL {
 		// Qtyは負, qtyは正
 		o.Qty += qty
 		if o.Qty < 0 { // 売建玉が残る部分約定

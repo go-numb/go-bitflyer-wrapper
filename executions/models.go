@@ -2,7 +2,6 @@ package executions
 
 import (
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -87,7 +86,16 @@ func (p *Execution) Set(ex []pex.Execution) {
 		p.volumes = volumes
 	}()
 
-	// == より、strings.HasPrefixのほうが早い
+	// 実行した回数: 1000000000
+	// １回あたりの実行に掛かった時間(ns/op)
+
+	// BenchmarkHasPrefix
+	// buy/sell: 0.000087 ns/op
+	// 16byte: 0.000099 ns/op
+
+	// BenchmarkEqual
+	// buy/sell:0.000070 ns/op
+	// 16byte:  0.000087 ns/op
 	wg.Add(1)
 	go func() { // 約定ベースのBest値をとっていく
 		defer wg.Done()
@@ -96,12 +104,12 @@ func (p *Execution) Set(ex []pex.Execution) {
 		p.ltp = p.price
 
 		for i := range ex {
-			if strings.HasPrefix(ex[i].Side, v1.BUY) {
+			if ex[i].Side == v1.BUY {
 				// 配信内初回約定
 				p.buySize += ex[i].Size
 				p.best(true, ex[i].Price)
 
-			} else if strings.HasPrefix(ex[i].Side, v1.SELL) {
+			} else if ex[i].Side == v1.SELL {
 				// 配信内初回約定
 				p.sellSize += ex[i].Size
 				p.best(false, ex[i].Price)
@@ -158,12 +166,12 @@ func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
 		volumes[i] = ex[i].Size
 		loss.IsDisadvantage(ex[i])
 
-		if strings.HasPrefix(ex[i].Side, v1.BUY) {
+		if ex[i].Side == v1.BUY {
 			// 配信内初回約定
 			p.buySize += ex[i].Size
 			p.best(true, ex[i].Price)
 
-		} else if strings.HasPrefix(ex[i].Side, v1.SELL) {
+		} else if ex[i].Side == v1.SELL {
 			// 配信内初回約定
 			p.sellSize += ex[i].Size
 			p.best(false, ex[i].Price)
