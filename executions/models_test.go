@@ -3,6 +3,7 @@ package executions
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
 	"golang.org/x/sync/errgroup"
@@ -12,7 +13,8 @@ func TestSetExecution(t *testing.T) {
 	ch := make(chan jsonrpc.Response)
 	go jsonrpc.Get([]string{"lightning_executions_FX_BTC_JPY"}, ch)
 
-	e := New()
+	loss := make(chan Losscut)
+	e := New(loss)
 
 	var eg errgroup.Group
 
@@ -38,9 +40,25 @@ func TestSetExecution(t *testing.T) {
 	})
 
 	eg.Go(func() error {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
 		for {
 			select {
-			case v := <-e.l:
+			case <-ticker.C:
+				var l Losscut
+				l.isLosscut = true
+				l.createdAt = time.Now()
+				l.received(e.l)
+
+			}
+		}
+		return fmt.Errorf("")
+	})
+
+	eg.Go(func() error {
+		for {
+			select {
+			case v := <-loss:
 				fmt.Printf("losscut: %+v\n", v)
 			}
 		}

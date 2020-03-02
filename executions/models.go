@@ -33,13 +33,13 @@ type Execution struct {
 }
 
 // New is new Executes
-func New() *Execution {
+func New(ch chan Losscut) *Execution {
 	return &Execution{
 
 		prices:  make([]float64, 0),
 		volumes: make([]float64, 0),
 
-		l: make(chan Losscut),
+		l: ch,
 	}
 }
 
@@ -129,7 +129,7 @@ func (p *Execution) Set(ex []pex.Execution) {
 
 		// if gets Losscut, send to channel.
 		if loss.isLosscut {
-			go loss.revieved(p.l)
+			go loss.received(p.l)
 		}
 	}()
 
@@ -180,7 +180,7 @@ func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
 	}
 
 	if loss.isLosscut {
-		go loss.revieved(p.l)
+		go loss.received(p.l)
 	}
 
 	if len(prices) != len(volumes) {

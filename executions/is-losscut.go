@@ -13,11 +13,12 @@ import (
 type Losscut struct {
 	isLosscut bool
 	side      int
+	price     float64
 	volume    float64
 	createdAt time.Time
 }
 
-func (loss Losscut) revieved(c chan Losscut) {
+func (loss Losscut) received(c chan Losscut) {
 	c <- loss
 }
 
@@ -25,12 +26,14 @@ func (loss Losscut) revieved(c chan Losscut) {
 func (p *Losscut) IsDisadvantage(e pex.Execution) bool {
 	if !strings.HasPrefix(e.BuyChildOrderAcceptanceID, "JRF") {
 		p.side = 1
+		p.price = e.Price
 		p.isLosscut = true
 		p.volume += e.Size
 		p.createdAt = time.Now()
 		return true
 	} else if !strings.HasPrefix(e.SellChildOrderAcceptanceID, "JRF") {
 		p.side = -1
+		p.price = e.Price
 		p.isLosscut = true
 		p.volume += e.Size
 		p.createdAt = time.Now()
@@ -48,6 +51,10 @@ func (p *Losscut) Side() int {
 	return p.side
 }
 
+func (p *Losscut) Price() float64 {
+	return p.price
+}
+
 func (p *Losscut) Volume() float64 {
 	return p.volume
 }
@@ -57,5 +64,5 @@ func (p *Losscut) CreatedAt() time.Time {
 }
 
 func (p Losscut) String() string {
-	return fmt.Sprintf("%t,%s,%f,%s", p.isLosscut, v1.ToSide(p.side), p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
+	return fmt.Sprintf("%t,%s,%.1f,%f,%s", p.isLosscut, v1.ToSide(p.side), p.price, p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
 }
