@@ -71,7 +71,7 @@ func toInt(side string) int {
 	return 0
 }
 
-func (p *Managed) Switch(childs []jsonrpc.WsResponseForChildEvent) {
+func (p *Managed) Switch(childs []jsonrpc.WsChildOrderEvent) {
 	for i := range childs {
 		// ORDER, ORDER_FAILED, CANCEL, CANCEL_FAILED, EXECUTION, EXPIRE
 		switch childs[i].EventType {
@@ -104,7 +104,7 @@ func (p *Managed) Switch(childs []jsonrpc.WsResponseForChildEvent) {
 	}
 }
 
-func (p *Managed) executed(e jsonrpc.WsResponseForChildEvent) StatusType {
+func (p *Managed) executed(e jsonrpc.WsChildOrderEvent) StatusType {
 	o, ok := p.Orders.IsThere(e.ChildOrderAcceptanceID)
 	if !ok {
 		return NotExist

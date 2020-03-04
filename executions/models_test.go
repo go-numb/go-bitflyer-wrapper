@@ -1,17 +1,23 @@
 package executions
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/go-numb/go-bitflyer/v1/types"
 
 	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
 	"golang.org/x/sync/errgroup"
 )
 
 func TestSetExecution(t *testing.T) {
-	ch := make(chan jsonrpc.Response)
-	go jsonrpc.Get([]string{"lightning_executions_FX_BTC_JPY"}, ch)
+	ch := make(chan jsonrpc.WsWriter)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, []string{string(types.FXBTCJPY)})
+	defer cancel()
 
 	e := New()
 
@@ -21,7 +27,7 @@ func TestSetExecution(t *testing.T) {
 		for {
 			select {
 			case v := <-ch:
-				switch v.Type {
+				switch v.Types {
 				case jsonrpc.Executions:
 					e.HighPerformanceSet(v.Executions)
 					ask, bid := e.Best()

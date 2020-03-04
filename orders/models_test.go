@@ -1,9 +1,12 @@
 package orders
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/go-numb/go-bitflyer/v1/types"
 
 	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
 )
@@ -11,24 +14,28 @@ import (
 func TestSet(t *testing.T) {
 	var (
 		channels = []string{
-			"lightning_ticker_BTC_JPY",
+			"lightning_ticker_FX_BTC_FX",
 			"child_order_events",
 			// "parent_order_events",
 		}
-		ch = make(chan jsonrpc.Response)
+		symbols = []string{string(types.FXBTCJPY)}
+		ch      = make(chan jsonrpc.WsWriter)
 	)
 	key := os.Getenv("BFKEY")
 	secret := os.Getenv("BFSECRET")
 
-	go jsonrpc.Get([]string{"lightning_executions_FX_BTC_JPY"}, ch)
-	go jsonrpc.GetPrivate(key, secret, channels, ch)
+	ctx, cancel := context.WithCancel(context.Background())
+	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, symbols)
+	defer cancel()
+
+	go jsonrpc.ConnectForPrivate(ctx, ch, key, secret, channels)
 
 	m := New()
 
 	for {
 		select {
 		case v := <-ch:
-			switch v.Type {
+			switch v.Types {
 
 			// case jsonrpc.Executions:
 			// 	func() {
@@ -45,7 +52,7 @@ func TestSet(t *testing.T) {
 			// 	}()
 
 			case jsonrpc.ChildOrders:
-				m.Switch(v.ChildOrders)
+				m.Switch(v.ChildOrderEvent)
 				_, size := m.Orders.Sum()
 				fmt.Printf("onBoard: %f\n", size)
 				_, size = m.Positions.Sum()
