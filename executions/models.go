@@ -227,7 +227,6 @@ func (p *Execution) LTP() float64 {
 }
 
 // Volume 1配信中の出来高
-// 正の場合は買い成が強く、負の場合は売り成が強い
 func (p *Execution) Volume() (sum, buy, sell float64) {
 	p.RLock()
 	defer p.RUnlock()

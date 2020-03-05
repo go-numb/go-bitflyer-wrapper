@@ -25,10 +25,10 @@ func TestSet(t *testing.T) {
 	secret := os.Getenv("BFSECRET")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, symbols)
+	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, symbols, nil)
 	defer cancel()
 
-	go jsonrpc.ConnectForPrivate(ctx, ch, key, secret, channels)
+	go jsonrpc.ConnectForPrivate(ctx, ch, key, secret, channels, nil)
 
 	m := New()
 

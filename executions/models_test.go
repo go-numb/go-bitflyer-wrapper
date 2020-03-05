@@ -16,7 +16,7 @@ func TestSetExecution(t *testing.T) {
 	ch := make(chan jsonrpc.WsWriter)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, []string{string(types.FXBTCJPY)})
+	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, []string{string(types.FXBTCJPY)}, nil)
 	defer cancel()
 
 	e := New()
