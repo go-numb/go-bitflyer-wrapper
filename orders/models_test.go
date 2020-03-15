@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/go-numb/go-bitflyer/v1/types"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 
-	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/realtime/jsonrpc"
 )
 
 func TestSet(t *testing.T) {
@@ -19,7 +19,7 @@ func TestSet(t *testing.T) {
 			// "parent_order_events",
 		}
 		symbols = []string{string(types.FXBTCJPY)}
-		ch      = make(chan jsonrpc.WsWriter)
+		ch      = make(chan jsonrpc.Response)
 	)
 	key := os.Getenv("BFKEY")
 	secret := os.Getenv("BFSECRET")
@@ -52,7 +52,7 @@ func TestSet(t *testing.T) {
 			// 	}()
 
 			case jsonrpc.ChildOrders:
-				m.Switch(v.ChildOrderEvent)
+				m.Switch(v.ChildOrderEvents)
 				_, size := m.Orders.Sum()
 				fmt.Printf("onBoard: %f\n", size)
 				_, size = m.Positions.Sum()

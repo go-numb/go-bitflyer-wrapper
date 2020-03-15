@@ -6,9 +6,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/realtime/jsonrpc"
 
-	v1 "github.com/go-numb/go-bitflyer/v1"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 )
 
 // Managed is orders/positions struct
@@ -63,15 +63,15 @@ type Order struct {
 }
 
 func toInt(side string) int {
-	if side == v1.BUY {
+	if side == types.BUY {
 		return 1
-	} else if side == v1.SELL {
+	} else if side == types.SELL {
 		return -1
 	}
 	return 0
 }
 
-func (p *Managed) Switch(childs []jsonrpc.WsChildOrderEvent) {
+func (p *Managed) Switch(childs []jsonrpc.ChildOrderEvent) {
 	for i := range childs {
 		// ORDER, ORDER_FAILED, CANCEL, CANCEL_FAILED, EXECUTION, EXPIRE
 		switch childs[i].EventType {
@@ -104,13 +104,13 @@ func (p *Managed) Switch(childs []jsonrpc.WsChildOrderEvent) {
 	}
 }
 
-func (p *Managed) executed(e jsonrpc.WsChildOrderEvent) StatusType {
+func (p *Managed) executed(e jsonrpc.ChildOrderEvent) StatusType {
 	o, ok := p.Orders.IsThere(e.ChildOrderAcceptanceID)
 	if !ok {
 		return NotExist
 	}
 
-	if e.Side == v1.BUY {
+	if e.Side == types.BUY {
 		// Qtyは正, e.Sizeは正
 		o.Qty -= e.Size
 		if 0 < o.Qty { // 買建玉が残る部分約定
@@ -120,7 +120,7 @@ func (p *Managed) executed(e jsonrpc.WsChildOrderEvent) StatusType {
 		o.Qty = e.Size
 		return p.complete(o)
 
-	} else if e.Side == v1.SELL {
+	} else if e.Side == types.SELL {
 		// Qtyは負, e.Sizeは正
 		o.Qty += e.Size
 		if o.Qty < 0 { // 売建玉が残る部分約定
@@ -210,7 +210,7 @@ func (p *Managed) Check(isCancel bool, uuid interface{}, side string, qty float6
 		return NotExist
 	}
 
-	if side == v1.BUY {
+	if side == types.BUY {
 		// Qtyは正, qtyは正
 		o.Qty -= qty
 		if 0 < o.Qty { // 買建玉が残る部分約定
@@ -220,7 +220,7 @@ func (p *Managed) Check(isCancel bool, uuid interface{}, side string, qty float6
 		o.Qty = qty
 		return p.complete(o)
 
-	} else if side == v1.SELL {
+	} else if side == types.SELL {
 		// Qtyは負, qtyは正
 		o.Qty += qty
 		if o.Qty < 0 { // 売建玉が残る部分約定

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/go-numb/go-bitflyer/v1"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 
-	pex "github.com/go-numb/go-bitflyer/v1/public/executions"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/public/execution"
 )
 
 type Losscut struct {
@@ -19,7 +19,7 @@ type Losscut struct {
 }
 
 // IsDisadvantage 不利約定の集計
-func (p *Losscut) IsDisadvantage(e pex.Execution) bool {
+func (p *Losscut) IsDisadvantage(e execution.Execution) bool {
 	if !strings.HasPrefix(e.BuyChildOrderAcceptanceID, "JRF") {
 		p.side = 1
 		p.price = e.Price
@@ -60,5 +60,5 @@ func (p *Losscut) CreatedAt() time.Time {
 }
 
 func (p Losscut) String() string {
-	return fmt.Sprintf("%t,%s,%.1f,%f,%s", p.isLosscut, v1.ToSide(p.side), p.price, p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
+	return fmt.Sprintf("%t,%s,%.1f,%f,%s", p.isLosscut, types.Side(p.side), p.price, p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
 }

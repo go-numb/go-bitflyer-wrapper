@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-numb/go-bitflyer/v1/types"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 
-	"github.com/go-numb/go-bitflyer/v1/jsonrpc"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/realtime/jsonrpc"
 	"golang.org/x/sync/errgroup"
 )
 
 func TestSetExecution(t *testing.T) {
-	ch := make(chan jsonrpc.WsWriter)
+	ch := make(chan jsonrpc.Response)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go jsonrpc.Connect(ctx, ch, []string{"lightning_executions"}, []string{string(types.FXBTCJPY)}, nil)

@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	v1 "github.com/go-numb/go-bitflyer/v1"
-	pex "github.com/go-numb/go-bitflyer/v1/public/executions"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/public/execution"
+	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 )
 
 type Execution struct {
@@ -49,7 +49,7 @@ func (p *Execution) received(in interface{}) {
 
 // Set price/ltp(before1ws), bestbid/ask, volume, delay
 // benchmark: 7-25μs by Macbook Pro i7 2015 Late
-func (p *Execution) Set(ex []pex.Execution) {
+func (p *Execution) Set(ex []execution.Execution) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -108,12 +108,12 @@ func (p *Execution) Set(ex []pex.Execution) {
 		p.ltp = p.price
 
 		for i := range ex {
-			if ex[i].Side == v1.BUY {
+			if ex[i].Side == types.BUY {
 				// 配信内初回約定
 				p.buySize += ex[i].Size
 				p.best(true, ex[i].Price)
 
-			} else if ex[i].Side == v1.SELL {
+			} else if ex[i].Side == types.SELL {
 				// 配信内初回約定
 				p.sellSize += ex[i].Size
 				p.best(false, ex[i].Price)
@@ -142,7 +142,7 @@ func (p *Execution) Set(ex []pex.Execution) {
 
 // HighPerformanceSet price/ltp(before1ws), bestbid/ask, volume, delay
 // benchmark: 1.7-11μs by Macbook Pro i7 2015 Late
-func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
+func (p *Execution) HighPerformanceSet(ex []execution.Execution) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -170,12 +170,12 @@ func (p *Execution) HighPerformanceSet(ex []pex.Execution) {
 		volumes[i] = ex[i].Size
 		loss.IsDisadvantage(ex[i])
 
-		if ex[i].Side == v1.BUY {
+		if ex[i].Side == types.BUY {
 			// 配信内初回約定
 			p.buySize += ex[i].Size
 			p.best(true, ex[i].Price)
 
-		} else if ex[i].Side == v1.SELL {
+		} else if ex[i].Side == types.SELL {
 			// 配信内初回約定
 			p.sellSize += ex[i].Size
 			p.best(false, ex[i].Price)
