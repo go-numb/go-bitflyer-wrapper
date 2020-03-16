@@ -197,7 +197,7 @@ func (p *Orders) Sum() (length int, avg, sum float64) {
 		length++
 		sum += o.Qty
 		prices = append(prices, o.Price)
-		volumes = append(volumes, o.Qty)
+		volumes = append(volumes, math.Abs(o.Qty))
 
 		return true
 	})
