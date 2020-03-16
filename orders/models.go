@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/go-numb/go-exchanges/api/bitflyer/v1/realtime/jsonrpc"
+	"gonum.org/v1/gonum/stat"
 
 	"github.com/go-numb/go-exchanges/api/bitflyer/v1/types"
 )
@@ -183,7 +184,10 @@ func assert(in interface{}) (o Order, ok bool) {
 	return o, true
 }
 
-func (p *Orders) Sum() (length int, sum float64) {
+func (p *Orders) Sum() (length int, avg, sum float64) {
+	var (
+		prices, volumes []float64
+	)
 	p.m.Range(func(key, value interface{}) bool {
 		o, ok := p.IsThere(key)
 		if !ok {
@@ -192,10 +196,13 @@ func (p *Orders) Sum() (length int, sum float64) {
 
 		length++
 		sum += o.Qty
+		prices = append(prices, o.Price)
+		volumes = append(volumes, o.Qty)
 
 		return true
 	})
-	return length, sum
+
+	return length, stat.Mean(prices, volumes), sum
 }
 
 // Check 約定情報を引数に、mapに保有したordersから約定/部分約定を確認

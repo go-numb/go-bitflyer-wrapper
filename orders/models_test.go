@@ -53,10 +53,10 @@ func TestSet(t *testing.T) {
 
 			case jsonrpc.ChildOrders:
 				m.Switch(v.ChildOrderEvents)
-				_, size := m.Orders.Sum()
-				fmt.Printf("onBoard: %f\n", size)
-				_, size = m.Positions.Sum()
-				fmt.Printf("hasSize: %f\n", size)
+				_, avg, size := m.Orders.Sum()
+				fmt.Printf("onBoard: %.1f	%f\n", avg, size)
+				_, avg, size = m.Positions.Sum()
+				fmt.Printf("hasSize: %.1f	%f\n", avg, size)
 			}
 		}
 	}
