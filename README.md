@@ -1,5 +1,10 @@
 # go-bitflyer-wrapper  
-this pkg is my pkg:go-bitflyer wrapper, for managed.  
+this pkg is my pkg:go-bitflyer wrapper, for managed.    
+
+
+2020/03/13: switched go-bitflyer to go-exchanges/api/bitflyer.  
+- change private websocket struct  
+- change data types & assert type    
 
 ## public websocket
 ### table executions
