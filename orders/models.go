@@ -184,6 +184,8 @@ func assert(in interface{}) (o Order, ok bool) {
 	return o, true
 }
 
+const SATOSHI float64 = 0.00000001
+
 func (p *Orders) Sum() (length int, avg, sum float64) {
 	var (
 		prices, volumes []float64
@@ -196,8 +198,12 @@ func (p *Orders) Sum() (length int, avg, sum float64) {
 
 		length++
 		sum += o.Qty
-		prices = append(prices, o.Price)
-		volumes = append(volumes, math.Abs(o.Qty))
+
+		size := math.Abs(o.Qty)
+		if SATOSHI < size {
+			prices = append(prices, o.Price)
+			volumes = append(volumes, size)
+		}
 
 		return true
 	})
