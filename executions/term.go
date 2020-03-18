@@ -65,7 +65,7 @@ func (p *Term) Diff() float64 {
 func (p *Term) Change() float64 {
 	p.RLock()
 	defer p.RUnlock()
-	return p.first - p.last
+	return p.last - p.first
 }
 
 func (p *Term) High() float64 {
