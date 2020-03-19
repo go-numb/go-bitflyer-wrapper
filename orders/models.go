@@ -5,7 +5,6 @@ import (
 	"math"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/go-numb/go-exchanges/api/bitflyer/v1/realtime/jsonrpc"
 	"gonum.org/v1/gonum/stat"
@@ -138,12 +137,6 @@ func (p *Managed) executed(e jsonrpc.ChildOrderEvent) StatusType {
 }
 
 func (p *Orders) Set(o Order) {
-	start := time.Now()
-	defer func() {
-		end := time.Now()
-		fmt.Println("exec time: ", end.Sub(start))
-	}()
-
 	o.Qty = math.Abs(o.Qty) * float64(o.Side)
 	p.m.Store(o.OrderID, o)
 }
