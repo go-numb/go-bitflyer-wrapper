@@ -13,7 +13,8 @@ this pkg is my pkg:go-bitflyer wrapper, for managed.
 - ltp  
 - spread  
 - change price in this term (any any)  
-
+- term aggregate  
+- strategy: channel breakout  
 
 ## private websocket
 ### child orders

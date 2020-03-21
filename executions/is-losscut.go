@@ -60,5 +60,5 @@ func (p *Losscut) CreatedAt() time.Time {
 }
 
 func (p Losscut) String() string {
-	return fmt.Sprintf("%t,%s,%.1f,%f,%s", p.isLosscut, types.Side(p.side), p.price, p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
+	return fmt.Sprintf("%t,%s,%.1f,%f,%s", p.isLosscut, types.ToSide(p.side), p.price, p.volume, p.createdAt.Format("2006/01/02 15:04:05"))
 }
