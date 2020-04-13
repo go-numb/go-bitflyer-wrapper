@@ -141,6 +141,10 @@ func (p *Orders) Set(o Order) {
 	p.m.Store(o.OrderID, o)
 }
 
+func (p *Orders) Reset() {
+	p.m = sync.Map{}
+}
+
 func (p *Orders) Delete(uuid interface{}) {
 	p.m.Delete(uuid)
 }
