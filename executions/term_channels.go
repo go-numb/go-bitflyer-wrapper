@@ -32,6 +32,10 @@ func NewChannel(period int) *Channel {
 }
 
 func (p *Channel) Set(price float64) (isBreak bool) {
+	if math.IsNaN(price) {
+		return isBreak
+	}
+
 	p.Lock()
 	defer p.Unlock()
 
